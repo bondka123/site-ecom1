@@ -1,23 +1,21 @@
 import jwt from "jsonwebtoken";
 
-const adminAuth = async (req, res, next) => {
+const adminAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Accès refusé" });
+  }
+
+  const token = authHeader.split(" ")[1];
   try {
-    const { token } = req.headers;
-
-    if (!token) {
-      return res.status(401).json({ success: false, message: "Unauthorized!" });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded.isAdmin) {
+      return res.status(403).json({ message: "Admin uniquement" });
     }
-
-    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-
-    if (decodedToken !== process.env.ADMIN_EMAIL + process.env.ADMIN_PASSWORD) {
-      return res.status(401).json({ success: false, message: "Unauthorized!" });
-    }
-
+    req.admin = decoded;
     next();
-  } catch (error) {
-    console.log("Error while authenticating admin: ", error);
-    res.status(500).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(401).json({ message: "Token invalide" });
   }
 };
 
