@@ -13,8 +13,8 @@ const addProduct = async (req, res) => {
       bestSeller,
     } = req.body;
 
-    // Validation des champs obligatoires (sizes optionnel)
-    if (!name || !description || !price || !category || !subCategory) {
+    // Validation des champs obligatoires
+    if (!name || !description || !price || !category || !subCategory || !sizes) {
       return res.status(400).json({ 
         success: false, 
         message: "Tous les champs obligatoires doivent être remplis" 
@@ -49,7 +49,13 @@ const addProduct = async (req, res) => {
       }
     }
 
-    // Images optionnelles - pas obligatoires
+    // Vérification qu'au moins une image a été uploadée
+    if (image.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Au moins une image est requise" 
+      });
+    }
 
     // Création des données du produit
     const productData = {
@@ -58,7 +64,7 @@ const addProduct = async (req, res) => {
       price: Number(price),
       category,
       subCategory,
-      sizes: Array.isArray(sizes) ? sizes : (sizes ? JSON.parse(sizes) : []),
+      sizes: Array.isArray(sizes) ? sizes : JSON.parse(sizes),
       bestSeller: bestSeller === "true" || bestSeller === true,
       image: image,
       date: Date.now(),
